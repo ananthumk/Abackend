@@ -5,7 +5,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const db = require('./config/database');
 
-// Import routes
+//routes
 const authRoutes = require('./routes/auth');
 const storeRoutes = require('./routes/stores');
 const userRoutes = require('./routes/users');
@@ -13,31 +13,43 @@ const ratingRoutes = require('./routes/ratings');
 
 const app = express();
 
-// Middleware
-app.use(cors());
+const allowedOrigins = ['https://afrontend-5lzp.vercel.app', 'http://localhost:3001'];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true
+}));
+
+
+
 app.use(helmet());
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Routes
+
 app.use('/api/auth', authRoutes);
 app.use('/api/stores', storeRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/ratings', ratingRoutes);
 
-// Health check endpoint
+
 app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'Server is running' });
 });
 
-// Error handling middleware
+
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ success: false, message: 'Something went wrong!' });
 });
 
-// 404 handler
+
 app.use((req, res) => {
   res.status(404).json({ success: false, message: 'Route not found' });
 });
